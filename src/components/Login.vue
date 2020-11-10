@@ -4,16 +4,16 @@
       <div class="avatar-box">
         <img src="../assets/logo.png" alt="">
       </div>
-      <el-form label-width="0px" class="login-form" :model="loginForm">
-        <el-form-item>
-          <el-input :model="loginForm.username" prefix-icon="el-icon-user"></el-input>
+      <el-form label-width="0px" class="login-form" ref="loginFormRef" :model="loginForm" :rules="loginFormRules">
+        <el-form-item prop="username">
+          <el-input v-model="loginForm.username" prefix-icon="el-icon-user"></el-input>
         </el-form-item>
-        <el-form-item>
-          <el-input :model="loginForm.password" prefix-icon="el-icon-lock"></el-input>
+        <el-form-item prop="password">
+          <el-input v-model="loginForm.password" prefix-icon="el-icon-lock" type="password"></el-input>
         </el-form-item>
         <el-form-item class="btns">
-          <el-button type="primary">登录</el-button>
-          <el-button type="info">重置</el-button>
+          <el-button type="primary" @click="login('loginFormRef')">登录</el-button>
+          <el-button type="info" @click="resetLoginForm('loginFormRef')">重置</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -27,10 +27,68 @@ export default {
   name: 'Login',
   data () {
     return {
+      // 数据对象
       loginForm: {
         username: '',
         password: ''
+      },
+      // 校验规则
+      loginFormRules: {
+        username: [
+          {
+            required: true,
+            message: '请输入登录名称',
+            trigger: 'blur'
+          },
+          {
+            min: 3,
+            max: 10,
+            message: '长度在 3 到 10 个字符',
+            trigger: 'blur'
+          }
+        ],
+        password: [
+          {
+            required: true,
+            message: '请输入密码',
+            trigger: 'blur'
+          },
+          {
+            min: 3,
+            max: 10,
+            message: '长度在 3 到 10 个字符',
+            trigger: 'blur'
+          }
+        ]
       }
+    }
+  },
+  methods: {
+    resetLoginForm (loginFormRef) {
+      this.$refs[loginFormRef].resetFields()
+    },
+    login: function (loginFormRef) {
+      this.$refs[loginFormRef].validate(async valid => {
+        if (valid) {
+          const { data: res } = await this.$http.post('login', this.loginForm)
+          if (res.meta.status !== 200) {
+            this.$message({
+              message: '登录失败',
+              type: 'warning'
+            })
+          } else {
+            this.$message({
+              message: '登录成功',
+              type: 'success'
+            })
+            window.sessionStorage.setItem('token', res.data.token)
+            this.$router.push('/home')
+          }
+        } else {
+          console.log('error submit!!')
+          return false
+        }
+      })
     }
   }
 }
