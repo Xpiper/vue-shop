@@ -330,6 +330,7 @@ export default {
       const { data: res1 } = await this.$http.get(`users/${userId}`)
       this.userInfo = res1.data
       // 查询所有角色信息
+      this.roleOptions = []
       const { data: res2 } = await this.$http.get('roles')
       res2.data.map(item => this.roleOptions.push({
         label: item.roleName,
