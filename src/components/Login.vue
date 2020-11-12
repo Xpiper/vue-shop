@@ -85,7 +85,6 @@ export default {
             this.$router.push('/home')
           }
         } else {
-          console.log('error submit!!')
           return false
         }
       })
