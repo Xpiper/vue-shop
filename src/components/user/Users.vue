@@ -36,7 +36,8 @@
             <el-button type="danger" icon="el-icon-delete" circle size="mini"
                        @click="deleteUser(scope.row.id)"></el-button>
             <el-tooltip class="item" effect="dark" content="分配角色" placement="top" :enterable="false">
-              <el-button type="warning" icon="el-icon-setting" circle size="mini"></el-button>
+              <el-button type="warning" icon="el-icon-setting" circle size="mini"
+                         @click="showAllotDialog(scope.row.id)"></el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -89,7 +90,33 @@
         <el-button type="primary" @click="editUser">确 定</el-button>
        </span>
     </el-dialog>
-
+    <el-dialog title="分配角色" :visible.sync="allotDialogVisible" width="50%">
+      <el-form :model="userInfo" ref="allotFormRef" label-width="70px">
+        <el-form-item label="用户名">
+          <el-input v-model="userInfo.username" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="邮箱" prop="email">
+          <el-input v-model="userInfo.email" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="手机" prop="mobile">
+          <el-input v-model="userInfo.mobile" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="userInfo.role_id" placeholder="请选择">
+            <el-option
+              v-for="item in roleOptions"
+              :key="item.id"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="allotDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="allotUser">确 定</el-button>
+       </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -121,6 +148,7 @@ export default {
       total: 0,
       addDialogVisible: false,
       editDialogVisible: false,
+      allotDialogVisible: false,
       addForm: {
         username: '',
         password: '',
@@ -214,8 +242,10 @@ export default {
             trigger: 'blur'
           }
         ]
-      }
-
+      },
+      userInfo: {},
+      roleId: '',
+      roleOptions: []
     }
   },
   methods: {
@@ -293,9 +323,30 @@ export default {
           message: '已取消删除'
         })
       })
+    },
+    // 分配角色
+    async showAllotDialog (userId) {
+      // 查询用户信息
+      const { data: res1 } = await this.$http.get(`users/${userId}`)
+      this.userInfo = res1.data
+      // 查询所有角色信息
+      const { data: res2 } = await this.$http.get('roles')
+      res2.data.map(item => this.roleOptions.push({
+        label: item.roleName,
+        value: item.id
+      }))
+      this.allotDialogVisible = true
+    },
+
+    async allotUser () {
+      console.log(this.userInfo.id)
+      console.log(this.userInfo.role_id)
+      const { data: res } = await this.$http.put(`users/${this.userInfo.id}/role`, { rid: this.userInfo.role_id })
+      console.log(res.data)
+      this.allotDialogVisible = false
+      this.getUserList()
     }
-  },
-  mounted () {
+
   },
   created () {
     this.getUserList()
